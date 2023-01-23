@@ -1,10 +1,11 @@
 # Broker 
-## webhook generate for finvasia 
+## order placement and webhook for finvasia
 
 ### make a server and wait for the incoming post request from trading view and post order in broker 
 
-i'm using python fastapi for making the webserver 
-`pip instal fastapi`
+let's try flask first then we implement fastapi in future 
+
+`pip install Flask`
 
 will also need an ASGI server, for production
 `pip install uvicorn[standard]`
