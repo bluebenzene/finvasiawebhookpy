@@ -1,12 +1,59 @@
-# webhook generate for finvasia 
+# Broker 
+## webhook generate for finvasia 
 
-## make a server and wait for the incoming post request from trading view and post order in broker 
+### make a server and wait for the incoming post request from trading view and post order in broker 
+
+i'm using python fastapi for making the webserver 
+`pip instal fastapi`
+
+will also need an ASGI server, for production
+`pip install uvicorn[standard]`
+
+i will use finvasia python wrapper
+
+`https://github.com/Shoonya-Dev/ShoonyaApi-py`
+
+First configure the endpoints in the api_helper constructor. Thereon provide your credentials and login as follows.
+
+```python
+from api_helper import ShoonyaApiPy
+import logging
+
+#enable dbug to see request and responses
+logging.basicConfig(level=logging.DEBUG)
+
+#start of our program
+api = ShoonyaApiPy()
+
+# store credentail in .env
+user        = '< user id>'
+u_pwd       = '< password >'
+factor2     = 'second factor'
+vc          = 'vendor code'
+app_key     = 'API key'
+imei        = 'uniq identifier'
+
+
+ret = api.login(userid=user, password=pwd, twoFA=factor2, vendor_code=vc, api_secret=app_key, imei=imei)
+print(ret)
+```
+for placing market order.
+
+```python
+api.place_order(buy_or_sell='B', product_type='C',
+                        exchange='NSE', tradingsymbol='INFY-EQ', 
+                        quantity=1, discloseqty=0,price_type='MKT', price=0, trigger_price=None,
+                        retention='DAY', remarks='my_order_001')
+```
+
+
 
 ## below features 
 ### 1. normal buy/sell , nse/nfo/mcx , quantity
 extract the data received from the post request . one action should be check the parameter for buy or sell ,and quantity and exchange .
 
-```[
+```python
+[
 	{
 		"buy_or_sell" : "B",
 		"product_type" : "I",
@@ -21,14 +68,16 @@ extract the data received from the post request . one action should be check the
 ```
 
 ### 2. close position and place a new order 
-if the exchange is passed as `NFO` then if the instrument name starts with `BANKNIFTY` then close all the previous position of banknifty and place new order give quantity. if the instrument name starts with `NIFTY` then do the same . 
-```
+if the exchange is passed as `NFO` then if the instrument name 
+starts with `BANKNIFTY25JAN23` then close all the previous position of banknifty and place new order give quantity. 
+if the instrument name starts with `NIFTY25JAN23` then do the same . 
+``` python
 [
 	{
 		"buy_or_sell" : "B",
 		"product_type" : "I",
 		"exchange" : "NFO",
-		"tradingsymbol"  :  "BANKNIFTY23JAN23C44100",
+		"tradingsymbol"  :  "BANKNIFTY25JAN23C44100",
 		"quantity" : "25",
 		"discloseqty" : "0",
 		"price_type" : "MKT",
@@ -37,8 +86,8 @@ if the exchange is passed as `NFO` then if the instrument name starts with `BANK
 	}
 ]
 ```
-if the exchange name contains `NSE` then only close all the position starting with name instrument passed on webhook . and place a new order on given quantity and side 
-```
+if the exchange name contains `NSE || MCX` then only close all the position starting with name instrument passed on webhook . and place a new order on given quantity and side 
+``` python
 [
 	{
 		"buy_or_sell" : "B",
@@ -53,12 +102,10 @@ if the exchange name contains `NSE` then only close all the position starting wi
 	}
 ]
 ```
-### 3. exit all position on given instrument 
-the given instrument/trading symbole passed on webhook only close these instruments if there's any previous position . do not place new order 
 
-### 4. close all for close all position 
+### 3. close all for close all position 
 if webhook contains the message then close all position
-```
+``` python
 [
 	{
 		"exitall":true
@@ -66,9 +113,10 @@ if webhook contains the message then close all position
 ]
 
 ```
-### 5. set max profit and max loss 
-monitor the daily m2m if it cross these value then exit the program or close the webhook url for this day.
-```commandline
+### 4. set max profit and max loss 
+monitor the  `daily m2m = current mtm + pnl ` from all the position . every sec.
+if it cross these value then exit the program or close the webhook url for this day.
+```python
 [
   {
     "max_profit":3,
