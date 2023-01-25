@@ -129,10 +129,8 @@ def handle_post_request():
                         print(cn)
 
         if d.get('exchange') == "NSE" or "MCX":
-            print("close all nse")
             #  Iterate through the position book and filter the ones that start with tradingsymbol and get the netqty
             netpos = api.get_positions()
-            print(netpos)
             for item in netpos:
                 if item["tsym"].startswith(d.get('tradingsymbol')):
                     nnetqty = int(item["netqty"])
