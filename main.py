@@ -18,16 +18,16 @@ vendor_code = os.environ['vendor_code']
 imei = os.environ['imei']
 api_secret = os.environ['api_secret']
 
+api = ShoonyaApiPy()
+cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
+
 app = Flask(__name__)
 
 
 @app.route(f'/webhook/fin/{user}', methods=['POST'])
 def handle_post_request():
     data = request.get_json()
-    api = ShoonyaApiPy()
-    cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
     print("finvasia log:")
-    print(cone)
     print("Tradingview log")
     d = data[0]
     print(d)
@@ -67,13 +67,6 @@ def handle_post_request():
                                         quantity=abs(int(bnnetqty)), discloseqty=0, price_type='MKT',
                                         trigger_price=None,
                                         retention='DAY', )
-            # placea new order of given instrument
-            norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
-                                     d.get('tradingsymbol'),
-                                     d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
-                                     remarks="api place")
-            print("finvasia log")
-            print(norder)
 
         if d.get('exchange') == "NFO" and d.get('tradingsymbol').startswith("NIFTY"):
             print("close all nifty")
@@ -90,13 +83,7 @@ def handle_post_request():
                                         quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
                                         trigger_price=None,
                                         retention='DAY', )
-            #place a new order in nifty
-            norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
-                                     d.get('tradingsymbol'),
-                                     d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
-                                     remarks="api place")
-            print("finvasia log")
-            print(norder)
+
         if d.get('exchange') == "NSE" or "MCX":
             print("close all nse")
             #  Iterate through the position book and filter the ones that start with tradingsymbol and get the netqty
@@ -126,6 +113,3 @@ def handle_post_request():
 if __name__ == '__main__':
     print("hello")
     app.run(host='0.0.0.0', port=80)
-
-[{'tsym': 'BANKNIFTY19JAN23P44000', 'netqty': '50'}, {'tsym': 'BANKNIFTY25JAN23P44000', 'netqty': '100'},
- {'tsym': 'BANKNIFTY29JAN23P44000', 'netqty': '150'}, {'tsym': 'IDEA-EQ', 'netqty': '30'}]
