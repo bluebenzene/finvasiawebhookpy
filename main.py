@@ -59,6 +59,8 @@ def handle_post_request():
                                         retention='DAY', )
                         print("finvasia log:")
                         print(po)
+
+                os._exit(1)
                 break
             time.sleep(1)
 
