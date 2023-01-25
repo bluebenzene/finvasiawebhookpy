@@ -1,9 +1,12 @@
+import time
+
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from api_helper import ShoonyaApiPy
 import os
 import logging
 import pyotp
+import threading
 
 # enable dbug to see request and responses
 logging.basicConfig(level=logging.DEBUG)
@@ -31,6 +34,43 @@ def handle_post_request():
     print("Tradingview log")
     d = data[0]
     print(d)
+
+    # pnl calculate multithreading function
+    def pnl():
+        maxpnl = float(d.get("max_profit"))
+        maxloss = float(d.get("max_loss"))
+
+        while True:
+            ret = api.get_positions()
+            mtm = 0
+            pnl = 0
+            for i in ret:
+                mtm += float(i['urmtom'])
+                pnl += float(i['rpnl'])
+                day_m2m = mtm + pnl
+            mtm = float(day_m2m)
+            if (mtm >= maxpnl) or (mtm <= maxloss):
+                print("closing all position")
+                netpos = api.get_positions()
+                for o in netpos:
+                    if int(o['netqty']) != 0:
+                        transactiontype = "S" if int(o['netqty']) > 0 else "B"
+                        api.place_order(buy_or_sell=transactiontype, product_type=o['prd'],
+                                        exchange=o['exch'], tradingsymbol=o['tsym'],
+                                        quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
+                                        trigger_price=None,
+                                        retention='DAY', )
+                break
+            time.sleep(1)
+
+
+
+    # Create a new thread and run my_function in it
+    thread = threading.Thread(target=pnl)
+
+    # Start the thread
+    thread.start()
+
 
     # 1. normal place order
     if d.get('simple') is True:
@@ -106,6 +146,8 @@ def handle_post_request():
                                      remarks="api place")
             print("finvasia log")
             print(norder)
+
+
 
     return '200'
 
