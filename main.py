@@ -4,12 +4,10 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from api_helper import ShoonyaApiPy
 import os
-import logging
 import pyotp
 import threading
 
 # enable dbug to see request and responses
-logging.basicConfig(level=logging.DEBUG)
 
 load_dotenv()
 
@@ -30,7 +28,6 @@ app = Flask(__name__)
 @app.route(f'/webhook/fin/{user}', methods=['POST'])
 def handle_post_request():
     data = request.get_json()
-    print("finvasia log:")
     print("Tradingview log")
     d = data[0]
     print(d)
@@ -55,11 +52,13 @@ def handle_post_request():
                 for o in netpos:
                     if int(o['netqty']) != 0:
                         transactiontype = "S" if int(o['netqty']) > 0 else "B"
-                        api.place_order(buy_or_sell=transactiontype, product_type=o['prd'],
+                        po = api.place_order(buy_or_sell=transactiontype, product_type=o['prd'],
                                         exchange=o['exch'], tradingsymbol=o['tsym'],
                                         quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
                                         trigger_price=None,
                                         retention='DAY', )
+                        print("finvasia log:")
+                        print(po)
                 break
             time.sleep(1)
 
@@ -84,10 +83,12 @@ def handle_post_request():
         for o in netpos:
             if int(o['netqty']) != 0:
                 transactiontype = "S" if int(o['netqty']) > 0 else "B"
-                api.place_order(buy_or_sell=transactiontype, product_type=o['prd'],
+                eo = api.place_order(buy_or_sell=transactiontype, product_type=o['prd'],
                                 exchange=o['exch'], tradingsymbol=o['tsym'],
                                 quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT', trigger_price=None,
                                 retention='DAY', )
+                print("finvasia log:")
+                print(eo)
     # 2. close same instrument and place new order , if instrument starting with banknifty then close all instrument
     # contains banknfifty if nifty then close all instrument contains nifty, if exchange is nse then close the current
     if d.get('closeprevious') is True:
@@ -102,12 +103,13 @@ def handle_post_request():
                     bnnetqty = int(item["netqty"])
                     if int(bnnetqty) != 0:
                         transactiontype = "S" if int(bnnetqty) > 0 else "B"
-                        api.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
+                        ca = api.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
                                         exchange=item['exch'], tradingsymbol=item['tsym'],
                                         quantity=abs(int(bnnetqty)), discloseqty=0, price_type='MKT',
                                         trigger_price=None,
                                         retention='DAY', )
-
+                        print("finvasia log:")
+                        print(ca)
         if d.get('exchange') == "NFO" and d.get('tradingsymbol').startswith("NIFTY"):
             print("close all nifty")
             #  Iterate through the position book and filter the ones that start with "BANKNIFTY" and get the netqty
@@ -118,11 +120,13 @@ def handle_post_request():
                     nnetqty = int(item["netqty"])
                     if int(nnetqty) != 0:
                         transactiontype = "S" if int(nnetqty) > 0 else "B"
-                        api.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
+                        cn = api.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
                                         exchange=item['exch'], tradingsymbol=item['tsym'],
                                         quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
                                         trigger_price=None,
                                         retention='DAY', )
+                        print("finvasia log:")
+                        print(cn)
 
         if d.get('exchange') == "NSE" or "MCX":
             print("close all nse")
@@ -134,11 +138,14 @@ def handle_post_request():
                     nnetqty = int(item["netqty"])
                     if int(nnetqty) != 0:
                         transactiontype = "S" if int(nnetqty) > 0 else "B"
-                        api.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
+                        eq = api.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
                                         exchange=item['exch'], tradingsymbol=item['tsym'],
                                         quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
                                         trigger_price=None,
                                         retention='DAY', )
+                        print("finvasia log:")
+                        print(eq)
+
             # place a new order
             norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
                                      d.get('tradingsymbol'),
