@@ -3,7 +3,6 @@ import time
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from api_helper import ShoonyaApiPy
-import os
 import pyotp
 import threading
 
@@ -60,7 +59,7 @@ def handle_post_request():
                         print("finvasia log:")
                         print(po)
 
-                os._exit(1)
+
                 break
             time.sleep(1)
 
