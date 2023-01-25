@@ -56,6 +56,7 @@ extract the data received from the post request . one action should be check the
 ```python
 [
 	{
+                "simple": true,
 		"buy_or_sell" : "B",
 		"product_type" : "I",
 		"exchange" : "NSE",
