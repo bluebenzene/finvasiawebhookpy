@@ -50,7 +50,75 @@ def handle_post_request():
                                 retention='DAY', )
     # 2. close same instrument and place new order , if instrument starting with banknifty then close all instrument
     # contains banknfifty if nifty then close all instrument contains nifty, if exchange is nse then close the current
+    if d.get('closeprevious') is True:
+        if d.get('exchange') == "NFO" and d.get('tradingsymbol').startswith("BANKNIFTY"):
+            print("close all banknifty")
+            #  Iterate through the position book and filter the ones that start with "BANKNIFTY" and get the netqty
 
+            netpos = api.get_positions()
+            print(netpos)
+            for item in netpos:
+                if item["tsym"].startswith("BANKNIFTY"):
+                    bnnetqty = int(item["netqty"])
+                    if int(bnnetqty) != 0:
+                        transactiontype = "S" if int(bnnetqty) > 0 else "B"
+                        api.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
+                                        exchange=item['exch'], tradingsymbol=item['tsym'],
+                                        quantity=abs(int(bnnetqty)), discloseqty=0, price_type='MKT',
+                                        trigger_price=None,
+                                        retention='DAY', )
+            # placea new order of given instrument
+            norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
+                                     d.get('tradingsymbol'),
+                                     d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                     remarks="api place")
+            print("finvasia log")
+            print(norder)
+
+        if d.get('exchange') == "NFO" and d.get('tradingsymbol').startswith("NIFTY"):
+            print("close all nifty")
+            #  Iterate through the position book and filter the ones that start with "BANKNIFTY" and get the netqty
+            netpos = api.get_positions()
+            print(netpos)
+            for item in netpos:
+                if item["tsym"].startswith("NIFTY"):
+                    nnetqty = int(item["netqty"])
+                    if int(nnetqty) != 0:
+                        transactiontype = "S" if int(nnetqty) > 0 else "B"
+                        api.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
+                                        exchange=item['exch'], tradingsymbol=item['tsym'],
+                                        quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
+                                        trigger_price=None,
+                                        retention='DAY', )
+            #place a new order in nifty
+            norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
+                                     d.get('tradingsymbol'),
+                                     d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                     remarks="api place")
+            print("finvasia log")
+            print(norder)
+        if d.get('exchange') == "NSE" or "MCX":
+            print("close all nse")
+            #  Iterate through the position book and filter the ones that start with tradingsymbol and get the netqty
+            netpos = api.get_positions()
+            print(netpos)
+            for item in netpos:
+                if item["tsym"].startswith(d.get('tradingsymbol')):
+                    nnetqty = int(item["netqty"])
+                    if int(nnetqty) != 0:
+                        transactiontype = "S" if int(nnetqty) > 0 else "B"
+                        api.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
+                                        exchange=item['exch'], tradingsymbol=item['tsym'],
+                                        quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
+                                        trigger_price=None,
+                                        retention='DAY', )
+            # place a new order
+            norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
+                                     d.get('tradingsymbol'),
+                                     d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                     remarks="api place")
+            print("finvasia log")
+            print(norder)
 
     return '200'
 
@@ -58,3 +126,6 @@ def handle_post_request():
 if __name__ == '__main__':
     print("hello")
     app.run(host='0.0.0.0', port=80)
+
+[{'tsym': 'BANKNIFTY19JAN23P44000', 'netqty': '50'}, {'tsym': 'BANKNIFTY25JAN23P44000', 'netqty': '100'},
+ {'tsym': 'BANKNIFTY29JAN23P44000', 'netqty': '150'}, {'tsym': 'IDEA-EQ', 'netqty': '30'}]
