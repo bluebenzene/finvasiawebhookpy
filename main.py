@@ -1,16 +1,29 @@
-# This is a sample Python script.
+from dotenv import load_dotenv
+from flask import Flask, request, jsonify
+import os
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+load_dotenv()
+
+user = os.environ['userid']
+password = os.environ['password']
+twoFA = os.environ['twoFA']
+vendor_code = os.environ['vendor_code']
+imei = os.environ['imei']
+
+app = Flask(__name__)
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+@app.route(f'/webhook/fin/{user}', methods=['POST'])
+def handle_post_request():
+    data = request.get_json()
+    print("Tradingview log")
+    print(data[0])
+    print(data[0].get('simple'))
 
 
-# Press the green button in the gutter to run the script.
+    return '200'
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    print("hello")
+    app.run(host='0.0.0.0', port=80)
