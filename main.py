@@ -93,6 +93,7 @@ def handle_post_request():
                 print(eo)
     # 2. close same instrument and place new order , if instrument starting with banknifty then close all instrument
     # contains banknfifty if nifty then close all instrument contains nifty, if exchange is nse then close the current
+    # if close true , then check position book, of it return none, then place a order
     if d.get('closeprevious') is True:
         if d.get('exchange') == "NFO" and d.get('tradingsymbol').startswith("BANKNIFTY"):
             print("close all banknifty")
