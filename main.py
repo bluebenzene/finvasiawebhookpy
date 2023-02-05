@@ -1,12 +1,14 @@
 import time
 
 from dotenv import load_dotenv
-from flask import Flask, request, jsonify
+# from flask import Flask, request, jsonify
 from api_helper import ShoonyaApiPy
 import pyotp
 import threading
 import os
 import logging
+from fastapi import FastAPI, Request, Response
+import json
 
 logging.basicConfig(level=logging.DEBUG)
 import configparser
@@ -31,12 +33,14 @@ jaywebhook = config['jay']['username']
 # enable dbug to see request and responses
 
 
-app = Flask(__name__)
+# app = Flask(__name__
+app = FastAPI()
 
 
-@app.route(f'/webhook/fin/{swastikwebhook}', methods=['POST'])
-def swastikhandle():
-    data = request.get_json()
+@app.post(f'/webhook/fin/{swastikwebhook}')
+async def swastikhandle(request: Request):
+    data = await request.json()
+
     print("Tradingview log")
     d = data[0]
     print(d)
@@ -189,12 +193,12 @@ def swastikhandle():
                 print("finvasia log")
                 print(norder)
 
-    return '200'
+    return Response(status_code=200, content={"message": "Success"})
 
 
-@app.route(f'/webhook/fin/{jaywebhook}', methods=['POST'])
-def jayhandle():
-    data = request.get_json()
+@app.post(f'/webhook/fin/{jaywebhook}')
+async def jayhandle(request: Request):
+    data = await request.json()
     print("Tradingview log")
     d = data[0]
     print(d)
@@ -346,9 +350,12 @@ def jayhandle():
                 print("finvasia log")
                 print(norder)
 
-    return '200'
+    return Response(status_code=200, content={"message": "Success"})
 
 
 if __name__ == '__main__':
-    print("hello")
-    app.run(host='0.0.0.0', port=80)
+    print("hello from fast api")
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=80)
+    # app.run(host='0.0.0.0', port=80)
