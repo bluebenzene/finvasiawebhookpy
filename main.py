@@ -6,7 +6,9 @@ from api_helper import ShoonyaApiPy
 import pyotp
 import threading
 import os
+import logging
 
+logging.basicConfig(level=logging.DEBUG)
 import configparser
 
 config = configparser.ConfigParser()
@@ -16,33 +18,24 @@ config.read('credentials.ini')
 
 
 swastikapi = ShoonyaApiPy()
-swastikapi.login(config['swastik']['username'],config['swastik']['password'],pyotp.TOTP(config['swastik']['twoFA']).now(),config['swastik']['vendor_code'], config['swastik']['api_secret'],config['swastik']['imei'])
+first = swastikapi.login(config['swastik']['username'], config['swastik']['password'],
+                         pyotp.TOTP(config['swastik']['twoFA']).now(), config['swastik']['vendor_code'],
+                         config['swastik']['api_secret'], config['swastik']['imei'])
 swastikwebhook = config['swastik']['username']
 
 jayapi = ShoonyaApiPy()
-jayapi.login(config['jay']['username'],config['jay']['password'],pyotp.TOTP(config['jay']['twoFA']).now(),config['jay']['vendor_code'], config['jay']['api_secret'],config['jay']['imei'])
+sec = jayapi.login(config['jay']['username'], config['jay']['password'], pyotp.TOTP(config['jay']['twoFA']).now(),
+                   config['jay']['vendor_code'], config['jay']['api_secret'], config['jay']['imei'])
 jaywebhook = config['jay']['username']
 
-
 # enable dbug to see request and responses
-
-load_dotenv()
-
-user = os.environ['userid']
-password = os.environ['password']
-twoFA = os.environ['twoFA']
-twoFApin = pyotp.TOTP(twoFA).now()
-vendor_code = os.environ['vendor_code']
-imei = os.environ['imei']
-api_secret = os.environ['api_secret']
-
 
 
 app = Flask(__name__)
 
 
 @app.route(f'/webhook/fin/{swastikwebhook}', methods=['POST'])
-def handle_post_request():
+def swastikhandle():
     data = request.get_json()
     print("Tradingview log")
     d = data[0]
@@ -70,10 +63,10 @@ def handle_post_request():
                         if int(o['netqty']) != 0:
                             transactiontype = "S" if int(o['netqty']) > 0 else "B"
                             po = swastikapi.place_order(buy_or_sell=transactiontype, product_type=o['prd'],
-                                                 exchange=o['exch'], tradingsymbol=o['tsym'],
-                                                 quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
-                                                 trigger_price=None,
-                                                 retention='DAY', )
+                                                        exchange=o['exch'], tradingsymbol=o['tsym'],
+                                                        quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
+                                                        trigger_price=None,
+                                                        retention='DAY', )
                             print("finvasia log:")
                             print(po)
 
@@ -91,8 +84,10 @@ def handle_post_request():
 
     # 1. normal place order
     if d.get('simple') is True:
-        norder = swastikapi.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'), d.get('tradingsymbol'),
-                                 d.get('quantity'), 0, d.get('price_type'), float(d.get('price')), remarks="api place")
+        norder = swastikapi.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
+                                        d.get('tradingsymbol'),
+                                        d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                        remarks="api place")
         print("finvasia log")
         print(norder)
     # 3.exit all position
@@ -102,10 +97,10 @@ def handle_post_request():
             if int(o['netqty']) != 0:
                 transactiontype = "S" if int(o['netqty']) > 0 else "B"
                 eo = swastikapi.place_order(buy_or_sell=transactiontype, product_type=o['prd'],
-                                     exchange=o['exch'], tradingsymbol=o['tsym'],
-                                     quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
-                                     trigger_price=None,
-                                     retention='DAY', )
+                                            exchange=o['exch'], tradingsymbol=o['tsym'],
+                                            quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
+                                            trigger_price=None,
+                                            retention='DAY', )
                 print("finvasia log:")
                 print(eo)
     # 2. close same instrument and place new order , if instrument starting with banknifty then close all instrument
@@ -117,9 +112,9 @@ def handle_post_request():
         if netpos is None:
             print("send normal")
             norder = swastikapi.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
-                                     d.get('tradingsymbol'),
-                                     d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
-                                     remarks="api place")
+                                            d.get('tradingsymbol'),
+                                            d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                            remarks="api place")
             print("finvasia log")
             print(norder)
         else:
@@ -137,10 +132,11 @@ def handle_post_request():
                             if int(bnnetqty) != 0:
                                 transactiontype = "S" if int(bnnetqty) > 0 else "B"
                                 ca = swastikapi.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
-                                                     exchange=item['exch'], tradingsymbol=item['tsym'],
-                                                     quantity=abs(int(bnnetqty)), discloseqty=0, price_type='MKT',
-                                                     trigger_price=None,
-                                                     retention='DAY', )
+                                                            exchange=item['exch'], tradingsymbol=item['tsym'],
+                                                            quantity=abs(int(bnnetqty)), discloseqty=0,
+                                                            price_type='MKT',
+                                                            trigger_price=None,
+                                                            retention='DAY', )
                                 print("finvasia log:")
                                 print(ca)
                 except Exception as e:
@@ -157,10 +153,10 @@ def handle_post_request():
                             if int(nnetqty) != 0:
                                 transactiontype = "S" if int(nnetqty) > 0 else "B"
                                 cn = swastikapi.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
-                                                     exchange=item['exch'], tradingsymbol=item['tsym'],
-                                                     quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
-                                                     trigger_price=None,
-                                                     retention='DAY', )
+                                                            exchange=item['exch'], tradingsymbol=item['tsym'],
+                                                            quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
+                                                            trigger_price=None,
+                                                            retention='DAY', )
                                 print("finvasia log:")
                                 print(cn)
                 except Exception as e:
@@ -176,10 +172,10 @@ def handle_post_request():
                             if int(nnetqty) != 0:
                                 transactiontype = "S" if int(nnetqty) > 0 else "B"
                                 eq = swastikapi.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
-                                                     exchange=item['exch'], tradingsymbol=item['tsym'],
-                                                     quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
-                                                     trigger_price=None,
-                                                     retention='DAY', )
+                                                            exchange=item['exch'], tradingsymbol=item['tsym'],
+                                                            quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
+                                                            trigger_price=None,
+                                                            retention='DAY', )
                                 print("finvasia log:")
                                 print(eq)
                 except Exception as e:
@@ -187,15 +183,17 @@ def handle_post_request():
 
                 # place a new order
                 norder = swastikapi.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
-                                         d.get('tradingsymbol'),
-                                         d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
-                                         remarks="api place")
+                                                d.get('tradingsymbol'),
+                                                d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                                remarks="api place")
                 print("finvasia log")
                 print(norder)
 
     return '200'
+
+
 @app.route(f'/webhook/fin/{jaywebhook}', methods=['POST'])
-def handle_post_request():
+def jayhandle():
     data = request.get_json()
     print("Tradingview log")
     d = data[0]
@@ -223,10 +221,10 @@ def handle_post_request():
                         if int(o['netqty']) != 0:
                             transactiontype = "S" if int(o['netqty']) > 0 else "B"
                             po = jayapi.place_order(buy_or_sell=transactiontype, product_type=o['prd'],
-                                                 exchange=o['exch'], tradingsymbol=o['tsym'],
-                                                 quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
-                                                 trigger_price=None,
-                                                 retention='DAY', )
+                                                    exchange=o['exch'], tradingsymbol=o['tsym'],
+                                                    quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
+                                                    trigger_price=None,
+                                                    retention='DAY', )
                             print("finvasia log:")
                             print(po)
 
@@ -244,8 +242,10 @@ def handle_post_request():
 
     # 1. normal place order
     if d.get('simple') is True:
-        norder = jayapi.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'), d.get('tradingsymbol'),
-                                 d.get('quantity'), 0, d.get('price_type'), float(d.get('price')), remarks="api place")
+        norder = jayapi.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
+                                    d.get('tradingsymbol'),
+                                    d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                    remarks="api place")
         print("finvasia log")
         print(norder)
     # 3.exit all position
@@ -255,10 +255,10 @@ def handle_post_request():
             if int(o['netqty']) != 0:
                 transactiontype = "S" if int(o['netqty']) > 0 else "B"
                 eo = jayapi.place_order(buy_or_sell=transactiontype, product_type=o['prd'],
-                                     exchange=o['exch'], tradingsymbol=o['tsym'],
-                                     quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
-                                     trigger_price=None,
-                                     retention='DAY', )
+                                        exchange=o['exch'], tradingsymbol=o['tsym'],
+                                        quantity=abs(int(o['netqty'])), discloseqty=0, price_type='MKT',
+                                        trigger_price=None,
+                                        retention='DAY', )
                 print("finvasia log:")
                 print(eo)
     # 2. close same instrument and place new order , if instrument starting with banknifty then close all instrument
@@ -270,9 +270,9 @@ def handle_post_request():
         if netpos is None:
             print("send normal")
             norder = jayapi.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
-                                     d.get('tradingsymbol'),
-                                     d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
-                                     remarks="api place")
+                                        d.get('tradingsymbol'),
+                                        d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                        remarks="api place")
             print("finvasia log")
             print(norder)
         else:
@@ -290,10 +290,10 @@ def handle_post_request():
                             if int(bnnetqty) != 0:
                                 transactiontype = "S" if int(bnnetqty) > 0 else "B"
                                 ca = jayapi.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
-                                                     exchange=item['exch'], tradingsymbol=item['tsym'],
-                                                     quantity=abs(int(bnnetqty)), discloseqty=0, price_type='MKT',
-                                                     trigger_price=None,
-                                                     retention='DAY', )
+                                                        exchange=item['exch'], tradingsymbol=item['tsym'],
+                                                        quantity=abs(int(bnnetqty)), discloseqty=0, price_type='MKT',
+                                                        trigger_price=None,
+                                                        retention='DAY', )
                                 print("finvasia log:")
                                 print(ca)
                 except Exception as e:
@@ -310,10 +310,10 @@ def handle_post_request():
                             if int(nnetqty) != 0:
                                 transactiontype = "S" if int(nnetqty) > 0 else "B"
                                 cn = jayapi.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
-                                                     exchange=item['exch'], tradingsymbol=item['tsym'],
-                                                     quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
-                                                     trigger_price=None,
-                                                     retention='DAY', )
+                                                        exchange=item['exch'], tradingsymbol=item['tsym'],
+                                                        quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
+                                                        trigger_price=None,
+                                                        retention='DAY', )
                                 print("finvasia log:")
                                 print(cn)
                 except Exception as e:
@@ -329,10 +329,10 @@ def handle_post_request():
                             if int(nnetqty) != 0:
                                 transactiontype = "S" if int(nnetqty) > 0 else "B"
                                 eq = jayapi.place_order(buy_or_sell=transactiontype, product_type=item['prd'],
-                                                     exchange=item['exch'], tradingsymbol=item['tsym'],
-                                                     quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
-                                                     trigger_price=None,
-                                                     retention='DAY', )
+                                                        exchange=item['exch'], tradingsymbol=item['tsym'],
+                                                        quantity=abs(int(nnetqty)), discloseqty=0, price_type='MKT',
+                                                        trigger_price=None,
+                                                        retention='DAY', )
                                 print("finvasia log:")
                                 print(eq)
                 except Exception as e:
@@ -340,9 +340,9 @@ def handle_post_request():
 
                 # place a new order
                 norder = jayapi.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
-                                         d.get('tradingsymbol'),
-                                         d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
-                                         remarks="api place")
+                                            d.get('tradingsymbol'),
+                                            d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                            remarks="api place")
                 print("finvasia log")
                 print(norder)
 
