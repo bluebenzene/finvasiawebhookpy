@@ -65,7 +65,7 @@ def handle_post_request():
             except TypeError:
                 time.sleep(1)
 
-            time.sleep(1)
+            time.sleep(2)
 
     # Create a new thread and run my_function in it
     thread = threading.Thread(target=pnl)
