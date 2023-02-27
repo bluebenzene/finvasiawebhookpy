@@ -1,23 +1,28 @@
 import time
 
-from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from api_helper import ShoonyaApiPy
 import pyotp
 import threading
-import os
+
+import configparser
+
+# Create a ConfigParser object
+config = configparser.ConfigParser()
+
+# Read the configuration file
+config.read('credentials.ini')
 
 # enable dbug to see request and responses
 
-load_dotenv()
 
-user = os.environ['userid']
-password = os.environ['password']
-twoFA = os.environ['twoFA']
+user = config['jay']['username']
+password = config['jay']['password']
+twoFA = config['jay']['twoFA']
 twoFApin = pyotp.TOTP(twoFA).now()
-vendor_code = os.environ['vendor_code']
-imei = os.environ['imei']
-api_secret = os.environ['api_secret']
+vendor_code = config['jay']['vendor_code']
+imei = config['jay']['imei']
+api_secret = config['jay']['api_secret']
 
 api = ShoonyaApiPy()
 cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
@@ -75,10 +80,20 @@ def handle_post_request():
 
     # 1. normal place order
     if d.get('simple') is True:
+
         norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'), d.get('tradingsymbol'),
                                  d.get('quantity'), 0, d.get('price_type'), float(d.get('price')), remarks="api place")
         print("finvasia log")
         print(norder)
+
+    if d.get('second') is True:
+        norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'), d.get('tradingsymbol'),
+                                 d.get('quantity'), 0, d.get('price_type'), float(d.get('price')), remarks="api place")
+        nordertwo = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'), d.get('secondtradingsymbol'),
+                                 d.get('quantity'), 0, d.get('price_type'), float(d.get('price')), remarks="api place")
+        print("finvasia log")
+        print(norder)
+        print(nordertwo)
     # 3.exit all position
     if d.get('exitall') is True:
         netpos = api.get_positions()
