@@ -42,7 +42,7 @@ def relogin():
     global cone
     while True:
         login()
-        time.sleep(24 * 60 * 60)
+        time.sleep(6 * 60 * 60)
 
 
 login_thread = threading.Thread(target=relogin)
