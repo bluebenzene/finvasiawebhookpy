@@ -25,7 +25,28 @@ imei = config['jay']['imei']
 api_secret = config['jay']['api_secret']
 
 api = ShoonyaApiPy()
-cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
+# cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
+cone = None
+
+
+def login():
+    global cone
+    try:
+        cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
+        print("login successfull")
+    except Exception as e:
+        print(f"Login failed: {e}")
+
+
+def relogin():
+    global cone
+    while True:
+        login()
+        time.sleep(24 * 60 * 60)
+
+
+login_thread = threading.Thread(target=relogin)
+login_thread.start()
 
 app = Flask(__name__)
 
@@ -73,14 +94,13 @@ def handle_post_request():
             time.sleep(2)
 
     # Create a new thread and run my_function in it
-    thread = threading.Thread(target=pnl)
+    pnl_thread = threading.Thread(target=pnl)
 
     # Start the thread
-    thread.start()
+    pnl_thread.start()
 
     # 1. normal place order
     if d.get('simple') is True:
-
         norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'), d.get('tradingsymbol'),
                                  d.get('quantity'), 0, d.get('price_type'), float(d.get('price')), remarks="api place")
         print("finvasia log")
@@ -89,8 +109,10 @@ def handle_post_request():
     if d.get('second') is True:
         norder = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'), d.get('tradingsymbol'),
                                  d.get('quantity'), 0, d.get('price_type'), float(d.get('price')), remarks="api place")
-        nordertwo = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'), d.get('secondtradingsymbol'),
-                                 d.get('quantity'), 0, d.get('price_type'), float(d.get('price')), remarks="api place")
+        nordertwo = api.place_order(d.get('buy_or_sell'), d.get('product_type'), d.get('exchange'),
+                                    d.get('secondtradingsymbol'),
+                                    d.get('quantity'), 0, d.get('price_type'), float(d.get('price')),
+                                    remarks="api place")
         print("finvasia log")
         print(norder)
         print(nordertwo)
@@ -196,5 +218,9 @@ def handle_post_request():
 
 
 if __name__ == '__main__':
-    print("hello")
-    app.run(host='0.0.0.0', port=80)
+
+    print("Starting Flask app...")
+    try:
+        app.run(host='0.0.0.0', port=80)
+    except Exception as e:
+        print("Error occurred during Flask app startup:", e)
