@@ -126,3 +126,22 @@ if it cross these value then exit the program or close the webhook url for this 
   }
 ]
 ```
+
+### 5. multi instrument
+```python
+[
+	{
+    "simple": true,
+		"buy_or_sell" : "B",
+		"product_type" : "I",
+		"exchange" : "NSE",
+		"tradingsymbol"  :  "IDEA-EQ",
+        "secondtradingsymbol": "SBI-EQ",
+		"quantity" : "1",
+		"discloseqty" : "0",
+		"price_type" : "MKT",
+		"price"	:"0"
+	}
+]
+
+```
