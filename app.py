@@ -24,22 +24,19 @@ vendor_code = config['jay']['vendor_code']
 imei = config['jay']['imei']
 api_secret = config['jay']['api_secret']
 
-api = ShoonyaApiPy()
 # cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
-cone = None
-
+global api
 
 def login():
-    global cone
     try:
-        cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
+        api = ShoonyaApiPy()
+        api.login(user, password, twoFApin, vendor_code, api_secret, imei)
         print("login successfull")
     except Exception as e:
         print(f"Login failed: {e}")
 
 
 def relogin():
-    global cone
     while True:
         login()
         time.sleep(6 * 60 * 60)
