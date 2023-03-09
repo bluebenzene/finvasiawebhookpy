@@ -25,9 +25,9 @@ imei = config['jay']['imei']
 api_secret = config['jay']['api_secret']
 
 # cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
-global api
 
 def login():
+    global api
     try:
         api = ShoonyaApiPy()
         api.login(user, password, twoFApin, vendor_code, api_secret, imei)
@@ -37,6 +37,7 @@ def login():
 
 
 def relogin():
+    global api
     while True:
         login()
         time.sleep(6 * 60 * 60)
