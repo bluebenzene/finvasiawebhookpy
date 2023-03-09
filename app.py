@@ -37,7 +37,6 @@ def login():
 
 
 def relogin():
-    global api
     while True:
         login()
         time.sleep(6 * 60 * 60)
