@@ -4,8 +4,9 @@ from flask import Flask, request, jsonify
 from api_helper import ShoonyaApiPy
 import pyotp
 import threading
-
+import logging
 import configparser
+logging.basicConfig(level=logging.DEBUG)
 
 # Create a ConfigParser object
 config = configparser.ConfigParser()
@@ -16,13 +17,7 @@ config.read('credentials.ini')
 # enable dbug to see request and responses
 
 
-user = config['jay']['username']
-password = config['jay']['password']
-twoFA = config['jay']['twoFA']
-twoFApin = pyotp.TOTP(twoFA).now()
-vendor_code = config['jay']['vendor_code']
-imei = config['jay']['imei']
-api_secret = config['jay']['api_secret']
+
 
 # cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
 
@@ -30,8 +25,16 @@ def login():
     global api
     try:
         api = ShoonyaApiPy()
-        api.login(user, password, twoFApin, vendor_code, api_secret, imei)
+        user = config['jay']['username']
+        password = config['jay']['password']
+        twoFA = config['jay']['twoFA']
+        twoFApin = pyotp.TOTP(twoFA).now()
+        vendor_code = config['jay']['vendor_code']
+        imei = config['jay']['imei']
+        api_secret = config['jay']['api_secret']
+        ret = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
         print("login successfull")
+        print(ret)
     except Exception as e:
         print(f"Login failed: {e}")
 
@@ -39,7 +42,7 @@ def login():
 def relogin():
     while True:
         login()
-        time.sleep(6 * 60 * 60)
+        time.sleep(12 * 60 * 60)
 
 
 login_thread = threading.Thread(target=relogin)
