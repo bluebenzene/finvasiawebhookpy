@@ -6,6 +6,7 @@ import pyotp
 import threading
 import logging
 import configparser
+
 logging.basicConfig(level=logging.DEBUG)
 
 # Create a ConfigParser object
@@ -14,30 +15,26 @@ config = configparser.ConfigParser()
 # Read the configuration file
 config.read('credentials.ini')
 
+
 # enable dbug to see request and responses
-
-
 
 
 # cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
 
 def login():
     global api
-    try:
-        api = ShoonyaApiPy()
-        user = config['jay']['username']
-        password = config['jay']['password']
-        twoFA = config['jay']['twoFA']
-        twoFApin = pyotp.TOTP(twoFA).now()
-        vendor_code = config['jay']['vendor_code']
-        imei = config['jay']['imei']
-        api_secret = config['jay']['api_secret']
-        ret = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
-        print("login successfull")
-        print(ret)
-    except Exception as e:
-        print(f"Login failed: {e}")
-
+    global user
+    api = ShoonyaApiPy()
+    user = config['jay']['username']
+    password = config['jay']['password']
+    twoFA = config['jay']['twoFA']
+    twoFApin = pyotp.TOTP(twoFA).now()
+    vendor_code = config['jay']['vendor_code']
+    imei = config['jay']['imei']
+    api_secret = config['jay']['api_secret']
+    ret = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
+    print("login successfull")
+    print(ret)
 
 def relogin():
     while True:
