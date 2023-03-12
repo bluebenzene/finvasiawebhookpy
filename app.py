@@ -7,19 +7,12 @@ import threading
 import logging
 import configparser
 
-logging.basicConfig(level=logging.DEBUG)
-
 # Create a ConfigParser object
 config = configparser.ConfigParser()
 
 # Read the configuration file
 config.read('credentials.ini')
 
-
-# enable dbug to see request and responses
-
-
-# cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
 
 def login():
     global api
@@ -33,9 +26,7 @@ def login():
     imei = config['jay']['imei']
     api_secret = config['jay']['api_secret']
     ret = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
-    print("login successfull")
-    print(ret)
-
+    print("login successful")
 def relogin():
     while True:
         login()
