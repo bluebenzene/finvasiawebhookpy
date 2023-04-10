@@ -16,16 +16,18 @@ config.read('credentials.ini')
 # enable dbug to see request and responses
 
 
-user = config['jay']['username']
-password = config['jay']['password']
-twoFA = config['jay']['twoFA']
+user = config['client']['username']
+password = config['client']['password']
+twoFA = config['client']['twoFA']
 twoFApin = pyotp.TOTP(twoFA).now()
-vendor_code = config['jay']['vendor_code']
-imei = config['jay']['imei']
-api_secret = config['jay']['api_secret']
+vendor_code = config['client']['vendor_code']
+imei = config['client']['imei']
+api_secret = config['client']['api_secret']
+
 
 api = ShoonyaApiPy()
-cone = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
+ret = api.login(user, password, twoFApin, vendor_code, api_secret, imei)
+
 
 app = Flask(__name__)
 
